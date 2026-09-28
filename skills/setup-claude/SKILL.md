@@ -16,9 +16,9 @@ If the hashes differ, ask the user whether they want to update. Only after they 
 ## Setup
 
 - Orchestrator: Opus 5.5 at `medium`.
-- Researcher: Sonnet 5 at `high`, no file edits.
+- Researcher: Sonnet 5.5 at `high`, no file edits.
 - Frontend engineer: Opus 5.5 at `high`, edits accepted inside the workspace.
-- Backend engineer: Opus 5.5 at `high`, edits accepted inside the workspace.
+- Backend engineer: Sonnet 5.5 at `high`, edits accepted inside the workspace.
 - Reviewer: Opus 5.5 at `high`, no file edits.
 - Route interface work to `frontend-engineer`, backend and non-interface implementation to `engineer`, read-only investigation to `researcher`, and independent QA to `reviewer`.
 - Finish research before implementation and stop implementation before review. Run multiple agents within a role when their tasks are independent. Default to backend before dependent frontend work; run both in parallel only after their shared contracts are settled and the remaining work is independent.
@@ -27,7 +27,7 @@ If the hashes differ, ask the user whether they want to update. Only after they 
 
 Claude Code has no session cap on concurrent subagents and no global default subagent model. Parallelism comes from batching agent calls in a single turn, and each agent file carries its own model and effort. Web search, web fetch, and context compaction are built in and need no configuration.
 
-Opus 5.5 runs orchestration, both implementation roles, and review, and Sonnet 5 runs research. Opus 5.5 performs at Fable 5.1's level on most work at two fifths of the price, so Fable is a manual escalation rather than a default. The configuration reference explains the per-role reasoning.
+Opus 5.5 runs orchestration, frontend implementation, and review. Sonnet 5.5 runs backend implementation and research, where it matches Opus 5.5 on well-scoped coding and knowledge work at half the price. Opus 5.5 beats Fable 5.1 on most published results, so Fable is a manual escalation rather than a default. The configuration reference explains the per-role reasoning.
 
 Read [the configuration reference](references/configuration.md) for the exact settings and agent definitions before previewing or applying them.
 
