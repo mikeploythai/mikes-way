@@ -10,7 +10,7 @@ Merge into `<codex-home>/config.toml`:
 
 ```toml
 # Orchestrator
-model = "gpt-6-sol"
+model = "gpt-6.1-sol"
 model_reasoning_effort = "xhigh"
 
 # Defaults
@@ -36,7 +36,7 @@ experimental_mode = true
 
 Experimental context management requires ChatGPT sign-in on Plus, Pro, or Pro Lite.
 
-This split keeps orchestration, backend implementation, and review on GPT-6 Sol, routes frontend work to GPT-6 Astra, and uses GPT-6 Luna for high-volume research. At standard API rates on September 22, 2026, Astra costs five times as much as Sol per token, while Luna costs one twentieth as much as Sol. Explicit role routing keeps Astra's higher cost limited to interface work and directs implementation to the named agents instead of unspecified Luna workers. The setup uses `xhigh` for orchestration and backend implementation, `high` for frontend work, review, and research. See the official [pricing](https://developers.openai.com/api/docs/pricing), [model guidance](https://developers.openai.com/api/docs/guides/latest-model), and [Codex subagent guidance](https://developers.openai.com/codex/agent-configuration/subagents).
+This split uses GPT-6.1 Sol for orchestration, backend implementation, and review, GPT-6 Astra for frontend work, and GPT-6 Luna for high-volume research. Explicit role routing directs implementation to the named agents instead of unspecified Luna workers. The setup uses `xhigh` for orchestration and backend implementation, and `high` for frontend work, review, and research. See the official [GPT-6.1 Sol model documentation](https://developers.openai.com/api/docs/models/gpt-6.1-sol), [pricing](https://developers.openai.com/api/docs/pricing), and [Codex subagent guidance](https://developers.openai.com/codex/agent-configuration/subagents).
 
 ## Researcher
 
@@ -106,7 +106,7 @@ Install as `<codex-home>/agents/reviewer.toml`:
 name = "reviewer"
 description = "Independently reviews changes and tests whether the assigned user path works."
 
-model = "gpt-6-sol"
+model = "gpt-6.1-sol"
 model_reasoning_effort = "high"
 
 sandbox_mode = "read-only"
@@ -136,7 +136,7 @@ Install as `<codex-home>/agents/engineer.toml`:
 name = "engineer"
 description = "Implements backend and non-interface slices, verifies them, and resolves review findings."
 
-model = "gpt-6-sol"
+model = "gpt-6.1-sol"
 model_reasoning_effort = "xhigh"
 
 sandbox_mode = "workspace-write"
