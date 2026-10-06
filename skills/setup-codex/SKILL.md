@@ -15,11 +15,11 @@ If the hashes differ, ask the user whether they want to update. Only after they 
 
 ## Setup
 
-- Orchestrator: `gpt-6-sol` at `xhigh`.
+- Orchestrator: `gpt-6.1-sol` at `xhigh`.
 - Researcher: `gpt-6-luna` at `high`, read-only.
 - Frontend engineer: `gpt-6-astra` at `high`, workspace-write.
-- Backend engineer: `gpt-6-sol` at `xhigh`, workspace-write.
-- Reviewer: `gpt-6-sol` at `high`, read-only.
+- Backend engineer: `gpt-6.1-sol` at `xhigh`, workspace-write.
+- Reviewer: `gpt-6.1-sol` at `high`, read-only.
 - Up to four concurrent subagent threads.
 - Route interface work to `frontend_engineer`, backend and non-interface implementation to `engineer`, read-only investigation to `researcher`, and independent QA to `reviewer`.
 - Finish research before implementation and stop implementation before review. Run multiple agents within a role when their tasks are independent. Default to backend before dependent frontend work; run both in parallel only after their shared contracts are settled and the remaining work is independent.
