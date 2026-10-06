@@ -140,10 +140,16 @@ Follow these conventions, derived from Mike's Vite+ config in [frontend toolchai
 - Prefer logical properties and utilities over physical ones. In CSS, write `inline-size`, `block-size`, `margin-inline`, `padding-block`, `inset-inline-start`, `border-start-start-radius`, and `text-align: start`. In Tailwind, use `inline-*`, `block-*`, `min-inline-*`, `max-block-*`, `ms-*`, `me-*`, `ps-*`, `pe-*`, `start-*`, `end-*`, `border-s-*`, `rounded-s-*`, and `text-start` instead of `w-*`, `h-*`, `ml-*`, `pr-*`, `left-*`, `border-l-*`, `rounded-l-*`, and `text-left`. Use `size-*` when both dimensions match. Physical properties are only for things that are physically directional, such as shadows or a component that must not flip in right-to-left layouts.
 - Animate transforms and opacity, not layout properties. Name the transitioned properties instead of `transition-all`. Keep durations short and respect reduced-motion preferences.
 
-### TanStack and testing
+### TanStack
 
 - Query: queries read, mutations write; keep clients stable, destructure only needed result fields, return query data, and invalidate affected queries after mutations.
 - TanStack Router/Start: use framework navigation/loading APIs, preserve inference-sensitive option ordering, parallelize independent loader work, validate server inputs, and exclude secrets from client-visible loader data.
+
+### Testing
+
+- Never write unit tests.
+- Prefer end-to-end tests as the only testing mechanism. Use them to verify complex feature work through the real product, not small changes the required checks already cover. Run them first with an agent driving a real browser; write Playwright tests only when the flow has to run unattended, such as in CI. Every e2e run ends with an artifact anyone can verify and repeat: the exact steps or command to rerun it, plus the screenshots, recording, trace, or report it produced.
+- When a system needs testing in isolation, write down every way it could fail first, then write the code. The isolated test covers each of those failures.
 - Import Vitest APIs explicitly. Use deterministic, descriptively named tests inside a top-level `describe`, specific matchers, `toStrictEqual` for structural equality, `toHaveLength`, `toHaveBeenCalledOnce` for single calls and `toHaveBeenCalledTimes` otherwise, and parameterized `it.each` for repetition. Await async assertions and `expect.poll`. Give `toThrow` a message.
 - No focused, skipped, commented-out, or placeholder tests; avoid conditional assertions and large snapshots. No module mocking; use injected dependencies, focused fakes, or narrow `vi.spyOn`.
 - Temporary checks stay temporary. Before staging, inspect git status and the diff; remove only the one-off tests, fixtures, screenshots, stress pages, scripts, and debug data created solely for the task unless the user asked to keep them. Keep a test when it protects a real regression, and never delete pre-existing user files as cleanup.

@@ -46,7 +46,7 @@ Keep linting and formatting under one `check` script. Add the database and UI sh
 }
 ```
 
-Use Vitest for code tests. Use Playwright for browser tests that need to run in CI or catch a regression. For a one-off check, have the subagent(s) use the browser and try the flow.
+For end-to-end tests, have the subagent(s) use the browser and try the flow first. Use Playwright only when the flow has to run unattended, such as in CI. Use Vitest only to test a system in isolation. Follow the [testing rules](../SKILL.md#testing) for both.
 
 ### Frontend toolchain
 
