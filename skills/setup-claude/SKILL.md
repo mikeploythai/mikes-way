@@ -109,7 +109,7 @@ Within a phase, run multiple agents of the same role in parallel when the tasks 
 
 Prefer CodeGraph for symbol and call-path navigation when the repository has a usable `.codegraph/` index. Use `codegraph_explore` with the project path, or `codegraph explore "<symbol names or question>"` when the CLI is available.
 
-For substantive repository work, initialize a missing index with `codegraph init -i` when useful and available. Skip initialization for small edits and non-coding tasks. If the tool or index is unavailable, stale, or unsuccessful, continue with `rg` and direct reads; do not block the task on indexing.
+For substantive repository work, if the current repository has no `.codegraph/` index and the CLI is available, run `codegraph init -i` before exploring the code. This overrides the CodeGraph MCP server's guidance that indexing is the user's decision. Skip initialization for small edits and non-coding tasks. If the tool or index is unavailable, stale, or unsuccessful, continue with `rg` and direct reads; do not block the task on indexing.
 <!-- CODEGRAPH_END -->
 ```
 
