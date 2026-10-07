@@ -57,6 +57,7 @@ If the hashes differ, ask the user whether they want to update. Only after they 
 - Keep one source of truth for each fact. Make invalid states hard to represent, and enforce the rules in the code that owns them. Use the domain concepts already in the app before adding another abstraction.
 - Be clear about what an API takes, what it returns, who can use it, how it fails, and what it changes. Account for retries and concurrent calls when they can happen.
 - When changing saved data or shared contracts, work out what happens to existing data and callers. Cover migrations, compatibility, and how to recover if something goes wrong.
+- Organize code by feature, on the server and the client. Follow the framework's own structure where it has one, and move code to a shared folder only when a second feature needs it.
 
 ## Interface quality
 
