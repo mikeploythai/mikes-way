@@ -143,7 +143,7 @@ Use a Vite frontend and generate the OpenAPI client with Hey API's Vite plugin. 
 
 Use MSAL React in the browser, `Microsoft.Identity.Web` on the server, and the Microsoft Graph SDK for Microsoft 365 integration. Prefer Azure Key Vault for secrets. The fallback is gitignored `secrets.config` for `<appSettings>` and `database.config` for connection strings.
 
-Production uses on-prem SQL Server, but do all data work in SQLite during development so it doesn't affect the production database. When Mike is ready, have a subagent create a SQL Server migration based on the changes made in SQLite. Account for differences between SQLite and SQL Server, and check the migration against a local or test SQL Server before handing it back for review. Creating the migration doesn't mean running it against production.
+Production uses on-prem SQL Server, but do all data work in SQL Server Express LocalDB during development so it doesn't affect the production database. LocalDB runs the same engine as production, so the migration stays plain T-SQL. When Mike is ready, have a subagent create a SQL Server migration based on the changes made in LocalDB, and check it against a fresh LocalDB or test SQL Server before handing it back for review. Creating the migration doesn't mean running it against production.
 
 Prefer `Microsoft.Data.SqlClient` for SQL Server, and add Dapper if it makes the queries or mapping easier. Use `System.Text.Json` if the target framework supports what you need.
 
