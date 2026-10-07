@@ -18,22 +18,22 @@ If the hashes differ, ask the user whether they want to update. Only after they 
 - Orchestrator: Opus 5.5 at `medium`.
 - Researcher: Sonnet 5.5 at `high`, no file edits.
 - Frontend engineer: Opus 5.5 at `high`, edits accepted inside the workspace.
-- Backend engineer: Sonnet 5.5 at `high`, edits accepted inside the workspace.
+- Backend engineer: Opus 5.5 at `medium`, edits accepted inside the workspace.
 - Reviewer: Opus 5.5 at `high`, no file edits.
 - Route interface work to `frontend-engineer`, backend and non-interface implementation to `engineer`, read-only investigation to `researcher`, and independent QA to `reviewer`.
 - Finish research before implementation and stop implementation before review. Run multiple agents within a role when their tasks are independent. Default to backend before dependent frontend work; run both in parallel only after their shared contracts are settled and the remaining work is independent.
 - Prompted approvals, Bash sandboxing where the platform supports it, and visible thinking summaries.
 - Global `CLAUDE.md` instructions for Mike's way and CodeGraph.
 
-Claude Code has no session cap on concurrent subagents and no global default subagent model. Parallelism comes from batching agent calls in a single turn, and each agent file carries its own model and effort. Web search, web fetch, and context compaction are built in and need no configuration.
+Claude Code has no session cap on concurrent subagents. Parallelism comes from batching agent calls in a single turn. Each agent file pins its own model and effort, so this setup doesn't use `CLAUDE_CODE_SUBAGENT_MODEL`, the environment variable that sets a default subagent model. `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` would override the pins. Web search, web fetch, and context compaction are built in and need no configuration.
 
-Opus 5.5 runs orchestration, frontend implementation, and review. Sonnet 5.5 runs backend implementation and research, where it matches Opus 5.5 on well-scoped coding and knowledge work at half the price. Opus 5.5 beats Fable 5.1 on most published results, so Fable is a manual escalation rather than a default. The configuration reference explains the per-role reasoning.
+Opus 5.5 runs orchestration, frontend and backend implementation, and review. Even at `medium`, it beats Sonnet 5.5 at `high`, so the backend engineer runs it at `medium` for about 50% more cost per task. Sonnet 5.5 runs research, where the work is input-heavy and its input and cache-read prices are half Opus's. Opus 5.5 beats Fable 5.1 on most published results, so Fable is a manual escalation rather than a default: raise effort first, since `/advisor` buys about what more effort does. The configuration reference explains the per-role reasoning.
 
 Read [the configuration reference](references/configuration.md) for the exact settings and agent definitions before previewing or applying them.
 
 ## Built-in agents and skills
 
-Claude Code ships `Explore` and `Plan` subagents and a `/code-review` skill. Prefer them for quick lookups, planning, and routine diff review. The installed agents are for work that should carry mikeploythai's rules end to end: sustained investigation, a bounded implementation slice, and review against agreed acceptance criteria.
+Claude Code ships `Explore` and `Plan` subagents and a `/code-review` skill. `Explore` and `Plan` inherit the main conversation's model, except that `Explore` switches to Opus when the main model is Fable. In this setup both run on Opus 5.5 and are not the cheap option. They suit quick lookups and planning; send sustained or read-heavy investigation to `researcher`. `/code-review` suits routine diff review. The installed agents are for work that should carry mikeploythai's rules end to end: sustained investigation, a bounded implementation slice, and review against agreed acceptance criteria.
 
 ## Plugins and MCP servers
 
@@ -73,11 +73,12 @@ Before changing an existing file, create a timestamped backup beside it.
 Merge only the settings owned by this setup:
 
 - `model`
-- `effortLevel`
 - `showThinkingSummaries`
 - `permissions.defaultMode`
 - `sandbox.enabled`
 - `sandbox.autoAllowBashIfSandboxed`
+
+When updating an earlier install, remove top-level `effortLevel` if it is `medium`, the earlier setup's value. It still applies to Fable, so `/model fable` would run at `medium`. If it holds a different value, ask the user.
 
 Install the four agent definitions from the configuration reference. Create missing directories as needed.
 

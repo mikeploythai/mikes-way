@@ -31,14 +31,13 @@ The skill preserves unrelated configuration and only changes global Claude Code 
 | Setting | Value |
 | --- | --- |
 | `model` | `claude-opus-5-5` |
-| `effortLevel` | `medium` |
 | `showThinkingSummaries` | `true` |
 | `permissions.defaultMode` | `default` |
 | `sandbox.enabled` | `true` |
 | `sandbox.autoAllowBashIfSandboxed` | `true` |
 
-Plus four subagents in `<claude-home>/agents/`: a read-only `researcher` on Sonnet 5.5 at `high`, a workspace-writing `frontend-engineer` on Opus 5.5 at `high`, a workspace-writing backend `engineer` on Sonnet 5.5 at `high`, and a read-only `reviewer` on Opus 5.5 at `high`. The global `CLAUDE.md` block routes work to those roles and runs research, implementation, and review as separate phases.
+Plus four subagents in `<claude-home>/agents/`: a read-only `researcher` on Sonnet 5.5 at `high`, a workspace-writing `frontend-engineer` on Opus 5.5 at `high`, a workspace-writing backend `engineer` on Opus 5.5 at `medium`, and a read-only `reviewer` on Opus 5.5 at `high`. The global `CLAUDE.md` block routes work to those roles and runs research, implementation, and review as separate phases. The orchestrator gets `medium` from Opus 5.5's own default, so no `effortLevel` is set. Updating an earlier install removes its `effortLevel` of `medium`.
 
-Opus 5.5 takes the orchestrator, frontend engineer, and reviewer seats, where open-ended judgment and catching defects matter most. Sonnet 5.5 takes the backend engineer and researcher seats. It matches Opus 5.5 on well-scoped coding and knowledge work at half the price, and the Opus reviewer covers its gap on hard problems. Fable 5.1 stays available through `/model` for a hard problem.
+Opus 5.5 takes the orchestrator, frontend engineer, backend engineer, and reviewer seats. Even at `medium`, it beats Sonnet 5.5 at `high` on independent benchmarks, and the backend engineer costs about 50% more per task than Sonnet 5.5, not double. Sonnet 5.5 takes the researcher seat, where the work is input-heavy and its input and cache-read prices are half Opus's. Fable 5.1 is a manual escalation: raise effort first, since `/advisor` buys about what more effort does, or use `/model fable` for a full switch.
 
-Some Codex settings have no counterpart here. Claude Code has no session cap on concurrent subagents and no global default subagent model, and web search, web fetch, and context compaction are built in.
+Some Codex settings have no counterpart here. Claude Code has no session cap on concurrent subagents. Each agent file pins its own model, so the setup doesn't use `CLAUDE_CODE_SUBAGENT_MODEL`, and `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` would override the pins. Web search, web fetch, and context compaction are built in.
