@@ -9,6 +9,8 @@ For a new frontend, follow the Vite+ scaffolding preference in [stack preference
 This is Mike's starting `vite.config.ts` for a React and Tailwind v4 app. Keep it when the installed versions support it and the repo has not chosen different rules. Remove the framework-specific presets, plugins, and comments that do not apply. Ultracite 7.12 or newer ships the `shadcn` preset used below; on older versions, upgrade rather than writing the plugin entry and rules by hand.
 
 ```ts
+// OpenAPI client projects only.
+import { heyApiPlugin } from "@hey-api/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 // TanStack Router projects only.
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
@@ -26,10 +28,15 @@ import tanstackJsPlugins from "ultracite/oxlint/tanstack/js-plugins";
 import vitest from "ultracite/oxlint/vitest";
 import { defineConfig, lazyPlugins } from "vite-plus";
 
+// dotnet build rewrites openapi.json on every build, so formatting it would
+// leave a diff after every build.
+const openApiDocument = "openapi.json";
+
 // https://vite.dev/config/
 export default defineConfig({
   fmt: {
     ...fmt,
+    ignorePatterns: [...(fmt.ignorePatterns ?? []), openApiDocument],
     singleAttributePerLine: true,
   },
   lint: {
@@ -45,7 +52,7 @@ export default defineConfig({
       tanstack,
       tanstackJsPlugins,
     ],
-    ignorePatterns: core.ignorePatterns,
+    ignorePatterns: [...(core.ignorePatterns ?? []), openApiDocument],
     jsPlugins: [
       ...(jsPlugins.jsPlugins ?? []),
       {
@@ -160,6 +167,22 @@ export default defineConfig({
     settings: jsPluginSettings,
   },
   plugins: lazyPlugins(() => [
+    // OpenAPI client projects only; see Hey API below.
+    heyApiPlugin({
+      config: {
+        input: openApiDocument,
+        output: {
+          entryFile: false,
+          path: "src/api",
+          postProcess: [{ args: ["fmt", "{{path}}"], command: "vp" }],
+        },
+        plugins: [
+          { name: "@hey-api/sdk", validator: true },
+          { dates: { local: true, offset: true }, name: "zod" },
+          { name: "@tanstack/react-query", queryKeys: { tags: true } },
+        ],
+      },
+    }),
     // TanStack Router projects only.
     tanstackRouter({
       autoCodeSplitting: true,
@@ -195,6 +218,37 @@ vp add -D oxc-transform-react
 ```
 
 Remove `babel-plugin-react-compiler`, `@babel/*` packages, Babel plugin options on the React plugin, and Babel configuration files that existed only for the replaced compiler. Do not leave the Babel compiler active alongside Oxc. Preserve Babel configuration that another build path still needs. Verify the installed React plugin supports the `compiler` option and run the build. See the [Oxc React Compiler guide](https://oxc.rs/docs/guide/usage/transformer/react-compiler).
+
+### Hey API
+
+Generate the API client with Hey API's Vite plugin, as configured above:
+
+- `entryFile: false` skips the `index.ts` barrel, so app code imports from the generated file that owns each piece, such as `@/api/@tanstack/react-query.gen`, `@/api/types.gen`, `@/api/zod.gen`, and `@/api/client.gen`.
+- `postProcess` runs `vp fmt` over the output, so regenerating doesn't undo `vp check --fix` on Hey API's non-`.gen` files.
+- `validator: true` validates both requests and responses with the Zod plugin.
+- `dates` accepts .NET's ISO date-times with and without an offset.
+- `queryKeys.tags` lets you invalidate queries by OpenAPI tag.
+
+The native TypeScript types are the source of truth; Zod only supplies runtime schemas. Don't enable the Zod plugin's `types.infer`: the SDK then types responses with the Zod types and loses the status-code map ([hey-api#3290](https://github.com/hey-api/hey-api/issues/3290); fix in progress in [#4454](https://github.com/hey-api/hey-api/pull/4454)). Revisit once that ships.
+
+Hey API throws the raw response body without the status. To detect a 401, register `client.interceptors.error.use((cause, response) => …)` on `client` from `@/api/client.gen` and check `response.status`.
+
+Ultracite's `core` and `oxfmt` presets already ignore `**/*.gen.*`; lint and format the rest of `src/api`. Hey API's `src/api/client/index.ts` re-exports `TDataShape`, so add a `lint.overrides` entry that turns off only `anti-slop/no-shape-in-symbol-names` for that file:
+
+```ts
+{
+  files: ["src/api/client/index.ts"],
+  rules: { "anti-slop/no-shape-in-symbol-names": "off" },
+},
+```
+
+The config ignores the .NET build-time `openapi.json` in both tools, after each preset's own patterns. Without a build-time document, drop `openApiDocument` and the ignore entries, and point `input` at the server's OpenAPI URL.
+
+`vp check` skips ignored files, so it never sees type errors in generated code. When generated code is committed, make the check script type-check the app too, using the app's tsconfig:
+
+```json
+"check": "vp check --fix && tsc --noEmit -p tsconfig.app.json"
+```
 
 ### Tailwind
 

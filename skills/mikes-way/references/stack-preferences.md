@@ -32,7 +32,9 @@ Immediately after initialization, run this from the newly created app directory:
 pnpm up --latest
 ```
 
-Use pnpm workspaces for a monorepo. Add Turborepo if you need its task dependencies, caching, or remote execution. Make the dev command start the server and wait for its OpenAPI document before starting the frontend. Hey API needs the server running to generate the client. If you're using Drizzle, start Drizzle Studio too.
+Temporary, as of October 2026: Hey API 0.99.0 crashes under TypeScript 7 ([hey-api#4235](https://github.com/hey-api/hey-api/issues/4235)). In projects that use Hey API, pin `typescript` to `^6.0.3` after `pnpm up --latest` and say why in the PR, because `pnpm up --latest` moves it back to 7. Remove the pin and this note once a stable fix ships.
+
+Use pnpm workspaces for a monorepo. Add Turborepo if you need its task dependencies, caching, or remote execution. Make the dev command start the server and wait for its OpenAPI document before starting the frontend. When Hey API reads the document from a URL, it needs the server running to generate the client. If you're using Drizzle, start Drizzle Studio too.
 
 Keep linting and formatting under one `check` script. Add the database and UI shortcuts if those tools are in the project:
 
@@ -50,11 +52,11 @@ For end-to-end tests, have the subagent(s) use the browser and try the flow firs
 
 ### Frontend toolchain
 
-Read [frontend toolchain guidance](frontend-toolchain.md) when setting up or changing Vite+, linting, or styling integrations. It covers Mike's `vite.config.ts`, required lint-plugin dev dependencies, TanStack-only presets, `resolve.tsconfigPaths` for aliases, and the `@tailwindcss/vite` dev dependency preference. Use the Oxc React Compiler through `reactVite({ compiler: true })` with `oxc-transform-react` as a dev dependency, and remove the Babel compiler setup it replaces.
+Read [frontend toolchain guidance](frontend-toolchain.md) when setting up or changing Vite+, linting, or styling integrations. It covers Mike's `vite.config.ts`, the Hey API client setup, required lint-plugin dev dependencies, TanStack-only presets, `resolve.tsconfigPaths` for aliases, and the `@tailwindcss/vite` dev dependency preference. Use the Oxc React Compiler through `reactVite({ compiler: true })` with `oxc-transform-react` as a dev dependency, and remove the Babel compiler setup it replaces.
 
 For Tailwind v4 projects, extend Ultracite's `shadcn` preset in `vite.config.ts`, following the compatibility and configuration guidance in [frontend toolchain guidance](frontend-toolchain.md#tailwind-design-system-linting). It works without shadcn/ui. Keep its six rules on, with the layout allowances and design-system source override it ships. Preserve other existing rule policies and use narrow, accepted exceptions.
 
-When a Vite app needs local HTTPS, use `vite-plugin-mkcert`. Add it as a dev dependency and add `mkcert()` to the Vite plugins. Use the HTTPS origin for MSAL React development and match it in the app's registered redirect URI.
+When a Vite app needs local HTTPS, use `vite-plugin-mkcert`. Add it as a dev dependency and add `mkcert()` to the Vite plugins. Prefer it over loading the ASP.NET dev cert in `vite.config.ts`, because shelling out to `dotnet` fails `sonarjs/no-os-command-from-path`. Its default certificate covers only `localhost`, IPs, and `server.host`, so pass a dev hostname through `hosts`, such as `mkcert({ hosts: ["app.dev.localhost"] })`. Use the HTTPS origin for MSAL React development and match it in the app's registered redirect URI.
 
 ### Frontend choices
 
@@ -139,7 +141,25 @@ Start with PostHog for observability. Use Sentry if you need more help diagnosin
 
 This part is mostly for Mike's day job, where production runs on on-prem IIS and Microsoft SQL Server. There's still .NET Framework, with a move toward modern .NET. It might help someone working in a similar setup, but don't assume every project has these constraints.
 
-Use a Vite frontend and generate the OpenAPI client with Hey API's Vite plugin. A small server can use `.ashx` handlers and `NSwag.Generation`. On .NET Framework, prefer Microsoft ASP.NET Web API with OWIN if the app supports it. On modern .NET, use minimal APIs. Build the frontend into `wwwroot` if that's where the IIS app serves it from.
+Use a Vite frontend and generate the OpenAPI client with Hey API's Vite plugin. A small server can use `.ashx` handlers and `NSwag.Generation`. On .NET Framework, prefer Microsoft ASP.NET Web API with OWIN if the app supports it. On modern .NET, use minimal APIs. Build the frontend into `wwwroot` if that's where the IIS app serves it from: set `build.outDir: "../wwwroot"` and `build.emptyOutDir: true`, and gitignore `wwwroot`.
+
+On modern .NET, generate the OpenAPI document at build time with `Microsoft.AspNetCore.OpenApi` and `Microsoft.Extensions.ApiDescription.Server`. Set `OpenApiDocumentsDirectory` to `client` and `OpenApiGenerateDocumentsOptions` to `--file-name openapi`, and point Hey API at that file, so the client builds without a running server. Skip startup-only work, such as migrations or seeding, while the generator runs: `Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider"`. Follow the Hey API setup in [frontend toolchain guidance](frontend-toolchain.md#hey-api).
+
+Write endpoints so the document is accurate:
+
+- Name each endpoint with `.WithName(...)` for stable operationIds.
+- Return typed results.
+- Put DataAnnotations on records as `[property: …]`.
+- Make request types `public` so `AddValidation()` generates validators for them.
+- Set JSON number handling to strict so `int` isn't emitted as `integer | string`.
+
+In development, proxy API paths from Vite to Kestrel:
+
+- Target `https://localhost:<port>`, because Node on Windows can't resolve `*.dev.localhost`.
+- Set `changeOrigin: false` so OIDC redirect URIs and cookies stay on the Vite origin.
+- Set `secure: false`; it only affects the loopback hop.
+- Type entries with `ProxyOptions` from `vite-plus`. Move them into a shared constant only when proxying many paths.
+- Fix `server.port` with `strictPort: true`, because dev origins are registered redirect URIs.
 
 Use MSAL React in the browser, `Microsoft.Identity.Web` on the server, and the Microsoft Graph SDK for Microsoft 365 integration. Prefer Azure Key Vault for secrets. The fallback is gitignored `secrets.config` for `<appSettings>` and `database.config` for connection strings.
 
